@@ -1,4 +1,7 @@
 # 🧑‍✈️ GPT PILOT
+
+<a href="https://trendshift.io/repositories/466" target="_blank"><img src="https://trendshift.io/api/badge/repositories/466" alt="Pythagora-io%2Fgpt-pilot | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+
 ### GPT Pilot helps developers build apps 20x faster
 
 You specify what kind of app you want to build. Then, GPT Pilot asks clarifying questions, creates the product and technical requirements, sets up the environment, and **starts coding the app step by step, like in real life, while you oversee the development process**. It asks you to review each task it finishes or to help when it gets stuck. This way, GPT Pilot acts as a coder while you are a lead dev who reviews code and helps when needed.
@@ -9,7 +12,7 @@ You specify what kind of app you want to build. Then, GPT Pilot asks clarifying 
 * [🔌 Requirements](#-requirements)
 * [🚦How to start using gpt-pilot?](#how-to-start-using-gpt-pilot)
     * [🐳 How to start gpt-pilot in docker?](#-how-to-start-gpt-pilot-in-docker)
-* [🧑‍💻️ Other arguments](#-other-arguments)
+* [🧑‍💻️ CLI arguments](#%EF%B8%8F-cli-arguments)
 * [🔎 Examples](#-examples)
     * [Real-time chat app](#-real-time-chat-app)
     * [Markdown editor](#-markdown-editor)
@@ -19,6 +22,7 @@ You specify what kind of app you want to build. Then, GPT Pilot asks clarifying 
 * [🕴How's GPT Pilot different from _Smol developer_ and _GPT engineer_?](#hows-gpt-pilot-different-from-smol-developer-and-gpt-engineer)
 * [🍻 Contributing](#-contributing)
 * [🔗 Connect with us](#-connect-with-us)
+* [🌟 Star history](#-star-history)
 <!-- TOC -->
 
 ---
@@ -50,22 +54,26 @@ https://github.com/Pythagora-io/gpt-pilot/assets/10895136/0495631b-511e-451b-93d
 
 # 🔌 Requirements
 
-- **Python 3**
+
+- **Python 3.9-3.12**
 - **PostgreSQL** (optional, projects default is SQLite)
-   - DB is needed for multiple reasons like continuing app development. If you have to stop at any point or the app crashes, go back to a specific step so that you can change some later steps in development, and easier debugging, in future we will add functionality to update project (change some things in existing project or add new features to the project and so on)...
+   - DB is needed for multiple reasons like continuing app development. If you have to stop at any point or the app crashes, go back to a specific step so that you can change some later steps in development, and easier debugging, in future we will add functionality to update project (change some things in existing project or add new features to the project and so on..)
 
 
 # 🚦How to start using gpt-pilot?
-After you have Python and PostgreSQL installed, follow these steps:
+After you have Python and (optionally) PostgreSQL installed, follow these steps:
 1. `git clone https://github.com/Pythagora-io/gpt-pilot.git` (clone the repo)
 2. `cd gpt-pilot`
 3. `python -m venv pilot-env` (create a virtual environment)
 4. `source pilot-env/bin/activate` (or on Windows `pilot-env\Scripts\activate`) (activate the virtual environment)
 5. `pip install -r requirements.txt` (install the dependencies)
 6. `cd pilot`
-7. `mv .env.example .env` (create the .env file)
-8. Add your environment (OpenAI/Azure), your API key, and the SQLite/PostgreSQL database info to the `.env` file
-   - to change from SQLite to PostgreSQL in your .env, just set `DATABASE_TYPE=postgres`
+7. `mv .env.example .env` (or on Windows `copy .env.example .env`) (create the .env file)
+8. Add your environment to the `.env` file:
+   - LLM Provider (OpenAI/Azure/Openrouter)
+   - Your API key
+   - database settings: SQLite/PostgreSQL (to change from SQLite to PostgreSQL, just set `DATABASE_TYPE=postgres`)
+   - optionally set IGNORE_FOLDERS for the folders which shouldn't be tracked by GPT Pilot in workspace, useful to ignore folders created by compilers (i.e. `IGNORE_FOLDERS=folder1,folder2,folder3`)
 9. `python db_init.py` (initialize the database)
 10. `python main.py` (start GPT Pilot)
 
@@ -73,17 +81,16 @@ After, this, you can just follow the instructions in the terminal.
 
 All generated code will be stored in the folder `workspace` inside the folder named after the app name you enter upon starting the pilot.
 
-**IMPORTANT: To run GPT Pilot, you need to have PostgreSQL set up on your machine**
-<br>
 
 ## 🐳 How to start gpt-pilot in docker?
 1. `git clone https://github.com/Pythagora-io/gpt-pilot.git` (clone the repo)
-2. Update the `docker-compose.yml` environment variables, which can be done via `docker compose config`
-3. run `docker compose build`. this will build a gpt-pilot container for you.
-4. run `docker compose up`.
-5. access the web terminal on `port 7681`
-6. `python db_init.py` (initialize the database)
-7. `python main.py` (start GPT Pilot)
+2. Update the `docker-compose.yml` environment variables, which can be done via `docker compose config` . if you use local model, please go to [https://localai.io/basics/getting_started/](https://localai.io/basics/getting_started/) start. 
+3. By default, GPT Pilot will read & write to `~/gpt-pilot-workspace` on your machine, you can also edit this in `docker-compose.yml`
+4. run `docker compose build`. this will build a gpt-pilot container for you.
+5. run `docker compose up`.
+6. access the web terminal on `port 7681`
+7. `python db_init.py` (initialize the database)
+8. `python main.py` (start GPT Pilot)
 
 This will start two containers, one being a new image built by the `Dockerfile` and a Postgres database. The new image also has [ttyd](https://github.com/tsl0922/ttyd) installed so that you can easily interact with gpt-pilot. Node is also installed on the image and port 3000 is exposed.
 
@@ -95,7 +102,7 @@ If not provided, the ProductOwner will ask for these values:
 
 `app_type` is used as a hint to the LLM as to what kind of architecture, language options and conventions would apply. If not provided, `prompts.prompts.ask_for_app_type()` will ask for it.
 
-See `const.common.ALL_TYPES`: 'Web App', 'Script', 'Mobile App', 'Chrome Extension'
+See `const.common.APP_TYPES`: 'Web App', 'Script', 'Mobile App', 'Chrome Extension'
 
 
 ## `app_id` and `workspace`
@@ -165,6 +172,18 @@ Erase all development steps previously done and continue working on an existing 
 ```bash
 python main.py app_id=<ID_OF_THE_APP> skip_until_dev_step=0
 ```
+
+## `theme`
+```bash
+python main.py theme=light
+```
+
+![屏幕截图 2023-10-15 103907](https://github.com/Pythagora-io/gpt-pilot/assets/138990495/c3d08f21-7e3b-4ee4-981f-281d1c97149e)
+```bash
+python main.py theme=dark
+```
+- Dark mode.
+![屏幕截图 2023-10-15 104120](https://github.com/Pythagora-io/gpt-pilot/assets/138990495/942cd1c9-b774-498e-b72a-677b01be1ac3)
 
 
 ## `delete_unrelated_steps`
@@ -249,3 +268,8 @@ Other than the research, GPT Pilot needs to be debugged to work in different sce
 🌟 As an open-source tool, it would mean the world to us if you starred the GPT-pilot repo 🌟
 
 💬 Join [the Discord server](https://discord.gg/HaqXugmxr9) to get in touch.
+
+
+# 🌟 Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=Pythagora-io/gpt-pilot&type=Date)](https://star-history.com/#Pythagora-io/gpt-pilot&Date)

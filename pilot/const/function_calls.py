@@ -40,11 +40,11 @@ def return_array_from_prompt(name_plural, name_singular, return_var_name):
     }
 
 
-def command_definition(description_command=f'A single command that needs to be executed.',
+def command_definition(description_command='A single command that needs to be executed.',
                        description_timeout=
                        'Timeout in milliseconds that represent the approximate time this command takes to finish. '
                        'If you need to run a command that doesnt\'t finish by itself (eg. a command to run an app), '
-                       'set the timeout to -1 and provide a process_name. '
+                       'set the timeout to to a value long enough to determine that it has started successfully and provide a command_id. '
                        'If you need to create a directory that doesn\'t exist and is not the root project directory, '
                        'always create it by running a command `mkdir`'):
     return {
@@ -59,10 +59,14 @@ def command_definition(description_command=f'A single command that needs to be e
                 'type': 'number',
                 'description': description_timeout,
             },
-            'process_name': {
+            'success_message': {
+                'type': 'string',
+                'description': 'A message to look for in the output of the command to determine if successful or not.',
+            },
+            'command_id': {
                 'type': 'string',
                 'description': 'If the process needs to continue running after the command is executed provide '
-                               'a name which you can use to kill the process later.',
+                               'a unique command identifier which you can use to kill the process later.',
             }
         },
         'required': ['command', 'timeout'],
@@ -136,14 +140,14 @@ DEV_TASKS_BREAKDOWN = {
                         'description': 'List of smaller development steps that need to be done to complete the entire task.',
                         'items': {
                             'type': 'object',
-                            'description': 'A smaller development step that needs to be done to complete the entire task.  Remember, if you need to run a command that doesnt\'t finish by itself (eg. a command to run an app), put the timeout to 3000 milliseconds. If you need to create a directory that doesn\'t exist and is not the root project directory, always create it by running a command `mkdir`',
+                            'description': 'A smaller development step that needs to be done to complete the entire task.  Remember, if you need to run a command that doesn\'t finish by itself (eg. a command to run an app), put the timeout to 3000 milliseconds. If you need to create a directory that doesn\'t exist and is not the root project directory, always create it by running a command `mkdir`',
                             'properties': {
                                 'type': {
                                     'type': 'string',
                                     'enum': ['command', 'code_change', 'human_intervention'],
                                     'description': 'Type of the development step that needs to be done to complete the entire task.',
                                 },
-                                'command': command_definition(f'A single command that needs to be executed.', 'Timeout in milliseconds that represent the approximate time the command takes to finish. This should be used only if the task is of a type "command". If you need to run a command that doesnt\'t finish by itself (eg. a command to run an app), put the timeout to 3000 milliseconds. Remember, this is not in seconds but in milliseconds so likely it always needs to be greater than 1000.'),
+                                'command': command_definition('A single command that needs to be executed.', 'Timeout in milliseconds that represent the approximate time the command takes to finish. This should be used only if the task is of a type "command". If you need to run a command that doesn\'t finish by itself (eg. a command to run an app), put the timeout to 3000 milliseconds. Remember, this is not in seconds but in milliseconds so likely it always needs to be greater than 1000.'),
                                 'code_change_description': {
                                     'type': 'string',
                                     'description': 'Description of a the development step that needs to be done. This should be used only if the task is of a type "code_change" and it should thoroughly describe what needs to be done to implement the code change for a single file - it cannot include changes for multiple files.',
@@ -179,7 +183,7 @@ IMPLEMENT_TASK = {
                         'description': 'List of smaller development steps that need to be done to complete the entire task.',
                         'items': {
                             'type': 'object',
-                            'description': 'A smaller development step that needs to be done to complete the entire task.  Remember, if you need to run a command that doesnt\'t finish by itself (eg. a command to run an  If you need to create a directory that doesn\'t exist and is not the root project directory, always create it by running a command `mkdir`',
+                            'description': 'A smaller development step that needs to be done to complete the entire task.  Remember, if you need to run a command that doesn\'t finish by itself (eg. a command to run an  If you need to create a directory that doesn\'t exist and is not the root project directory, always create it by running a command `mkdir`',
                             'properties': {
                                 'type': {
                                     'type': 'string',
@@ -201,7 +205,7 @@ IMPLEMENT_TASK = {
                                         },
                                         'content': {
                                             'type': 'string',
-                                            'description': 'Full content of the file that needs to be implemented.',
+                                            'description': 'Full content of the file that needs to be implemented. It is mandatory that no parts of file content are skipped or assumed to be there. It must be full content.',
                                         },
                                     },
                                     'required': ['name', 'path', 'content'],
@@ -289,16 +293,16 @@ DEV_STEPS = {
         },
         {
             'name': 'get_files',
-            'description': f'Returns development files that are currently implemented so that they can be analized and so that changes can be appropriatelly made.',
+            'description': 'Returns development files that are currently implemented so that they can be analized and so that changes can be appropriatelly made.',
             'parameters': {
                 'type': 'object',
                 'properties': {
                     'files': {
                         'type': 'array',
-                        'description': f'List of files that need to be analyzed to implement the required changes.',
+                        'description': 'List of files that need to be analyzed to implement the required changes.',
                         'items': {
                             'type': 'string',
-                            'description': f'A single file name that needs to be analized to implement the reqired changes. Remember, this is a file name with path relative to the project root. For example, if a file path is `{{project_root}}/models/model.py`, this value needs to be `models/model.py`.',
+                            'description': 'A single file name that needs to be analized to implement the reqired changes. Remember, this is a file name with path relative to the project root. For example, if a file path is `{{project_root}}/models/model.py`, this value needs to be `models/model.py`.',
                         }
                     }
                 },
@@ -327,14 +331,14 @@ CODE_CHANGES = {
                         'description': 'List of smaller development steps that need to be done to complete the entire task.',
                         'items': {
                             'type': 'object',
-                            'description': 'A smaller development step that needs to be done to complete the entire task.  Remember, if you need to run a command that doesnt\'t finish by itself (eg. a command to run an app), put the timeout to 3000 milliseconds. If you need to create a directory that doesn\'t exist and is not the root project directory, always create it by running a command `mkdir`',
+                            'description': 'A smaller development step that needs to be done to complete the entire task.  Remember, if you need to run a command that doesn\'t finish by itself (eg. a command to run an app), put the timeout to 3000 milliseconds. If you need to create a directory that doesn\'t exist and is not the root project directory, always create it by running a command `mkdir`',
                             'properties': {
                                 'type': {
                                     'type': 'string',
                                     'enum': ['command', 'code_change'],
                                     'description': 'Type of the development step that needs to be done to complete the entire task.',
                                 },
-                                'command': command_definition('Command that needs to be run to complete the current task. This should be used only if the task is of a type "command".', 'Timeout in milliseconds that represent the approximate time the command takes to finish. This should be used only if the task is of a type "command". If you need to run a command that doesnt\'t finish by itself (eg. a command to run an app), put the timeout to 3000 milliseconds. Remember, this is not in seconds but in milliseconds so likely it always needs to be greater than 1000.'),
+                                'command': command_definition('Command that needs to be run to complete the current task. This should be used only if the task is of a type "command".', 'Timeout in milliseconds that represent the approximate time the command takes to finish. This should be used only if the task is of a type "command". If you need to run a command that doesn\'t finish by itself (eg. a command to run an app), put the timeout to 3000 milliseconds. Remember, this is not in seconds but in milliseconds so likely it always needs to be greater than 1000.'),
                                 'code_change_description': {
                                     'type': 'string',
                                     'description': 'Description of a the development step that needs to be done. This should be used only if the task is of a type "code_change" and it should thoroughly describe what needs to be done to implement the code change.',
@@ -373,7 +377,7 @@ DEVELOPMENT_PLAN = {
                             },
                             'programmatic_goal': {
                                 'type': 'string',
-                                'description': 'programmatic goal that will determine if a task can be marked as done from a programmatic perspective (this will result in an automated test that is run before the task is sent to you for a review)',
+                                'description': 'Detailed description of programmatic goal. Programmatic goal that will determine if a task can be marked as done from a programmatic perspective (this will result in an automated test that is run before the task is sent to you for a review). All details previously specified by user that are important for this task must be included in this programmatic goal.',
                             },
                             'user_review_goal': {
                                 'type': 'string',
@@ -395,14 +399,15 @@ DEVELOPMENT_PLAN = {
 EXECUTE_COMMANDS = {
     'definitions': [{
         'name': 'execute_commands',
-        'description': f'Executes a list of commands. ',
+        'description': 'Executes a list of commands. ',
         'parameters': {
             'type': 'object',
             'properties': {
                 'commands': {
                     'type': 'array',
-                    'description': f'List of commands that need to be executed.  Remember, if you need to run a command that doesnt\'t finish by itself (eg. a command to run an app), put the timeout to 3000 milliseconds. If you need to create a directory that doesn\'t exist and is not the root project directory, always create it by running a command `mkdir`',
-                    'items': command_definition(f'A single command that needs to be executed.', f'Timeout in milliseconds that represent the approximate time this command takes to finish. If you need to run a command that doesnt\'t finish by itself (eg. a command to run an app), put the timeout to 3000 milliseconds.')
+                    'description': 'List of commands that need to be executed.  Remember, if you need to run a command that doesn\'t finish by itself (eg. a command to run an app), put the timeout to 3000 milliseconds. If you need to create a directory that doesn\'t exist and is not the root project directory, always create it by running a command `mkdir`',
+                    'items': command_definition('A single command that needs to be executed.',
+                                                'Timeout in milliseconds that represent the approximate time this command takes to finish. If you need to run a command that doesn\'t finish by itself (eg. a command to run an app), put the timeout to 3000 milliseconds.')
                 }
             },
             'required': ['commands'],
@@ -416,16 +421,16 @@ EXECUTE_COMMANDS = {
 GET_FILES = {
     'definitions': [{
         'name': 'get_files',
-        'description': f'Returns development files that are currently implemented so that they can be analized and so that changes can be appropriatelly made.',
+        'description': 'Returns development files that are currently implemented so that they can be analized and so that changes can be appropriatelly made.',
         'parameters': {
             'type': 'object',
             'properties': {
                 'files': {
                     'type': 'array',
-                    'description': f'List of files that need to be analized to implement the reqired changes. Any file name in this array MUST be from the directory tree listed in the previous message.',
+                    'description': 'List of files that need to be analized to implement the reqired changes. Any file name in this array MUST be from the directory tree listed in the previous message.',
                     'items': {
                         'type': 'string',
-                        'description': f'A single file name that needs to be analized to implement the reqired changes. Remember, this is a file name with path relative to the project root. For example, if a file path is `{{project_root}}/models/model.py`, this value needs to be `models/model.py`. This file name MUST be listed in the directory from the previous message.',
+                        'description': 'A single file name that needs to be analized to implement the reqired changes. Remember, this is a file name with path relative to the project root. For example, if a file path is `{{project_root}}/models/model.py`, this value needs to be `models/model.py`. This file name MUST be listed in the directory from the previous message.',
                     }
                 }
             },
@@ -456,11 +461,11 @@ IMPLEMENT_CHANGES = {
                             },
                             'path': {
                                 'type': 'string',
-                                'description': 'Path of the file that needs to be saved on the disk.',
+                                'description': 'Full path of the file with the file name that needs to be saved.',
                             },
                             'content': {
                                 'type': 'string',
-                                'description': 'Full content of the file that needs to be saved on the disk.',
+                                'description': 'Full content of the file that needs to be saved on the disk. It is mandatory that no parts of file content are skipped or assumed to be there. It must be full content.',
                             },
                             'description': {
                                 'type': 'string',
@@ -485,16 +490,16 @@ IMPLEMENT_CHANGES = {
 GET_TEST_TYPE = {
     'definitions': [{
         'name': 'test_changes',
-        'description': f'Tests the changes based on the test type.',
+        'description': 'Tests the changes based on the test type.',
         'parameters': {
             'type': 'object',
             'properties': {
                 'type': {
                     'type': 'string',
-                    'description': f'Type of a test that needs to be run. If this is just an intermediate step in getting a task done, put `no_test` as the type and we\'ll just go onto the next task without testing.',
+                    'description': 'Type of a test that needs to be run. If this is just an intermediate step in getting a task done, put `no_test` as the type and we\'ll just go onto the next task without testing.',
                     'enum': ['automated_test', 'command_test', 'manual_test', 'no_test']
                 },
-                'command': command_definition('Command that needs to be run to test the changes.', 'Timeout in milliseconds that represent the approximate time this command takes to finish. If you need to run a command that doesnt\'t finish by itself (eg. a command to run an app), put the timeout to 3000 milliseconds. If you need to create a directory that doesn\'t exist and is not the root project directory, always create it by running a command `mkdir`'),
+                'command': command_definition('Command that needs to be run to test the changes.', 'Timeout in milliseconds that represent the approximate time this command takes to finish. If you need to run a command that doesn\'t finish by itself (eg. a command to run an app), put the timeout to 3000 milliseconds. If you need to create a directory that doesn\'t exist and is not the root project directory, always create it by running a command `mkdir`'),
                 'automated_test_description': {
                     'type': 'string',
                     'description': 'Description of an automated test that needs to be run to test the changes. This should be used only if the test type is "automated_test" and it should thoroughly describe what needs to be done to implement the automated test so that when someone looks at this test can know exactly what needs to be done to implement this automated test.',
@@ -520,20 +525,27 @@ DEBUG_STEPS_BREAKDOWN = {
             'description': 'Starts the debugging process based on the list of steps that need to be done to debug the problem.',
             'parameters': {
                 'type': 'object',
-                "properties": {
-                    "steps": {
+                'properties': {
+                    'thoughts': {
+                        'type': 'string',
+                        'description': 'Thoughts that you have about the problem that you are trying to debug.'
+                    },
+                    'reasoning': {
+                        'type': 'string',
+                    },
+                    'steps': {
                         'type': 'array',
                         'description': 'List of steps that need to be done to debug the problem.',
                         'items': {
                             'type': 'object',
-                            'description': 'A single step that needs to be done to get closer to debugging this issue.  Remember, if you need to run a command that doesnt\'t finish by itself (eg. a command to run an app), put the timeout to 3000 milliseconds. If you need to create a directory that doesn\'t exist and is not the root project directory, always create it by running a command `mkdir`',
+                            'description': 'A single step that needs to be done to get closer to debugging this issue.  Remember, if you need to run a command that doesn\'t finish by itself (eg. a command to run an app), put the timeout to 3000 milliseconds. If you need to create a directory that doesn\'t exist and is not the root project directory, always create it by running a command `mkdir`',
                             'properties': {
                                 'type': {
                                     'type': 'string',
                                     'enum': ['command', 'code_change', 'human_intervention'],
                                     'description': 'Type of the step that needs to be done to debug this issue.',
                                 },
-                                'command': command_definition('Command that needs to be run to debug this issue.', 'Timeout in milliseconds that represent the approximate time this command takes to finish. If you need to run a command that doesnt\'t finish by itself (eg. a command to run an app), put the timeout to 3000 milliseconds.'),
+                                'command': command_definition('Command that needs to be run to debug this issue.', 'Timeout in milliseconds that represent the approximate time this command takes to finish. If you need to run a command that doesn\'t finish by itself (eg. a command to run an app), put the timeout to 3000 milliseconds.'),
                                 'code_change_description': {
                                     'type': 'string',
                                     'description': 'Description of a step in debugging this issue when there are code changes required. This should be used only if the task is of a type "code_change" and it should thoroughly describe what needs to be done to implement the code change for a single file - it cannot include changes for multiple files.',
@@ -542,16 +554,22 @@ DEBUG_STEPS_BREAKDOWN = {
                                     'type': 'string',
                                     'description': 'Description of a step in debugging this issue when there is a human intervention needed. This should be used only if the task is of a type "human_intervention".',
                                 },
+                                "need_to_see_output": {
+                                    'type': 'boolean',
+                                    'description': 'Set to `true` if the definition of subsequent steps may need to change after you see the output of a successful execution of this step. '
+                                                   'For example, if the purpose of a command is to check the status of a service or contents of a file before deciding how to proceed then this flag should be set to `true`. '
+                                                   'If subsequent steps can be executed as long as this step is successful, then this flag does not need to be set.',
+                                },
                                 "check_if_fixed": {
                                     'type': 'boolean',
-                                    'description': 'Flag that indicates if the original command that triggered the error that\'s being debugged should be tried after this step to check if the error is fixed. If you think that the original command `delete node_modules/ && delete package-lock.json` will pass after this step, then this flag should be set to TRUE and if you think that the original command will still fail after this step, then this flag should be set to FALSE.',
+                                    'description': 'Flag that indicates if the original command that triggered the error that\'s being debugged should be tried after this step to check if the error is fixed. If you think that the original command `delete node_modules/ && delete package-lock.json` will pass after this step, then this flag should be set to TRUE and if you think that the original command will still fail after this step, then this flag should be set to `false`.',
                                 }
                             },
                             'required': ['type', 'check_if_fixed'],
                         }
                     }
                 },
-                "required": ['steps'],
+                "required": ['thoughts', 'reasoning', 'steps'],
             },
         },
     ],

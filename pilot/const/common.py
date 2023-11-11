@@ -1,11 +1,14 @@
+import os
+
+
 APP_TYPES = ['Web App', 'Script', 'Mobile App', 'Chrome Extension']
 ROLES = {
     'product_owner': ['project_description', 'user_stories', 'user_tasks'],
     'architect': ['architecture'],
     'tech_lead': ['development_planning'],
-    'full_stack_developer': ['create_scripts', 'coding'],
+    'full_stack_developer': ['coding'],
     'dev_ops': ['environment_setup'],
-    'code_monkey': ['create_scripts', 'coding', 'implement_changes']
+    'code_monkey': ['coding']
 }
 STEPS = [
     'project_description',
@@ -14,13 +17,15 @@ STEPS = [
     'architecture',
     'environment_setup',
     'development_planning',
-    'create_scripts',
     'coding',
-    'implement_changes'
+    'finished'
 ]
+
+additional_ignore_folders = os.environ.get('IGNORE_FOLDERS', '').split(',')
 
 IGNORE_FOLDERS = [
     '.git',
+    '.gpt-pilot',
     '.idea',
     '.vscode',
     '__pycache__',
@@ -29,6 +34,7 @@ IGNORE_FOLDERS = [
     'venv',
     'dist',
     'build',
-]
+    'target'
+] + [folder for folder in additional_ignore_folders if folder]
 
 PROMPT_DATA_TO_IGNORE = {'directory_tree', 'name'}
